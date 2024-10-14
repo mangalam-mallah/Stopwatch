@@ -1,117 +1,120 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
-
-import React from 'react';
-import type {PropsWithChildren} from 'react';
+import React, { useState, useRef } from 'react';
 import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
   StyleSheet,
   Text,
-  useColorScheme,
   View,
+  TouchableOpacity,
 } from 'react-native';
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+function App(): React.JSX.Element {
+  const [timer, setTimer] = useState(0);
+  const [isActive, setIsActive] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
 
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
+  const countRef = useRef<NodeJS.Timeout | null>(null); // NodeJS.Timeout | null for TypeScript users
 
-function Section({children, title}: SectionProps): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+  // Start timer
+  const handleStart = () => {
+    if (isActive) {
+      console.warn("Timer is already running");
+      return;
+    }
+    
+    setIsActive(true);
+    setIsPaused(false);
+    countRef.current = setInterval(() => {
+      setTimer((prevTimer) => prevTimer + 1);
+    }, 1000);
+  };
+
+  // Pause timer
+  const handlePause = () => {
+    if (countRef.current) {
+      clearInterval(countRef.current);
+      countRef.current = null; // Reset ref to null
+      setIsPaused(true);
+    } else {
+      console.warn("No timer to pause");
+    }
+  };
+
+  // Continue timer
+  const handleContinue = () => {
+    if (isPaused) {
+      setIsPaused(false);
+      countRef.current = setInterval(() => {
+        setTimer((prevTimer) => prevTimer + 1);
+      }, 1000);
+    }
+  };
+
+  // Reset timer
+  const handleReset = () => {
+    if (countRef.current) {
+      clearInterval(countRef.current);
+      countRef.current = null; // Reset ref to null
+    }
+    setIsPaused(false);
+    setIsActive(false);
+    setTimer(0);
+  };
+
+  // Format time to MM:SS
+  const formatTime = (time: number) => {
+    const minutes = Math.floor(time / 60);
+    const seconds = time % 60;
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  };
+
   return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
+    <View style={styles.container}>
+      <Text style={styles.text}>{formatTime(timer)}</Text>
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity onPress={handleStart} style={styles.button}>
+          <Text style={styles.buttonText}>Start</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={handlePause} style={styles.button}>
+          <Text style={styles.buttonText}>Pause</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={handleContinue} style={styles.button}>
+          <Text style={styles.buttonText}>Continue</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={handleReset} style={styles.button}>
+          <Text style={styles.buttonText}>Reset</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
 
-function App(): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
-
-  return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
-  );
-}
-
 const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f0f0f0',
   },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
+  text: {
+    fontSize: 48,
+    fontStyle: 'italic',
+    marginBottom: 20,
   },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
   },
-  highlight: {
-    fontWeight: '700',
+  button: {
+    backgroundColor: '#6200ee',
+    padding: 10,
+    margin: 5,
+    borderRadius: 5,
+    flex: 1,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#ffffff',
+    fontSize: 20,
   },
 });
 
